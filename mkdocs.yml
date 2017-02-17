@@ -1,0 +1,6 @@
+site_name: AngularJS CoffeeScript Style Guide
+pages:
+    - Style Guide: 
+        - 'Basics': 'index.md'
+        - 'Advanced': 'advanced.md'
+    - About: about.md
