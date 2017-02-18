@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Advanced - AngularJS CoffeeScript Style Guide</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.5.0.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+	
+	<script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="..">AngularJS CoffeeScript Style Guide</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Style Guide <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            
+<li >
+    <a href="..">Basics</a>
+</li>
+                            
+<li class="active">
+    <a href="./">Advanced</a>
+</li>
+                        </ul>
+                    </li>
+                    <li >
+                        <a href="../about/">About</a>
+                    </li>
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                    <li >
+                        <a rel="next" href="..">
+                            <i class="fa fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../about/">
+                            Next <i class="fa fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#advanced">Advanced</a></li>
+            <li><a href="#exception-handling">Exception Handling</a></li>
+            <li><a href="#startup-logic">Startup Logic</a></li>
+            <li><a href="#animations">Animations</a></li>
+            <li><a href="#routing">Routing</a></li>
+            <li><a href="#filters">Filters</a></li>
+            <li><a href="#angular-wrapper-services">Angular $ Wrapper Services</a></li>
+            <li><a href="#resolving-promises">Resolving Promises</a></li>
+            <li><a href="#directives">Directives</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="advanced">Advanced</h1>
+<p>this part of guide is still working in progress</p>
+<h2 id="exception-handling">Exception Handling</h2>
+<h3 id="decorators">decorators</h3>
+<p>Use a <a href="https://docs.angularjs.org/api/auto/service/$provide#decorator">decorator</a>, at config time using the <a href="https://docs.angularjs.org/api/auto/service/$provide"><code>$provide</code></a> service, on the <a href="https://docs.angularjs.org/api/ng/service/$exceptionHandler"><code>$exceptionHandler</code></a> service to perform custom actions when exceptions occur.</p>
+<ul>
+<li>Provides a consistent way to handle uncaught Angular exceptions for development-time or run-time.</li>
+</ul>
+<p>Note: Another option is to override the service instead of using a decorator. This is a fine option, but if you want to keep the default behavior and extend it a decorator is recommended.</p>
+<pre><code class="coffee">
+(-&gt;
+
+exceptionConfig = ($provide)-&gt;
+    $provide.decorator
+        '$exceptionHandler', ['$delegate', '$log', extendExceptionHandler]
+
+
+extendExceptionHandler = ($delegate, $log)-&gt;
+    return (exception, cause)-&gt;
+        $delegate(exception, cause)
+        errorData =
+            exception: exception,
+            cause: cause
+
+        msg = 'ERROR PREFIX' + exception.message
+        $log.error(msg, errorData)
+
+        # Log during dev with http://toastrjs.com
+        # or any other technique you prefer
+        toastr.error(msg)
+
+
+angular
+    .module('app.exception')
+    .config(['$provide', exceptionConfig])
+)()
+</code></pre>
+
+<h3 id="exception-catchers">Exception Catchers</h3>
+<p>Create a service that exposes an interface to catch and gracefully handle exceptions.</p>
+<ul>
+<li>Provides a consistent way to catch exceptions that may be thrown in your code (e.g. during XHR calls or promise failures).</li>
+</ul>
+<p>Note: The exception catcher is good for catching and reacting to specific exceptions from calls that you know may throw one. For example, when making an XHR call to retrieve data from a remote web service and you want to catch any exceptions from that service and react uniquely.</p>
+<p>```javascript
+  /<em> recommended </em>/
+  angular
+      .module('blocks.exception')
+      .service('exception', exception);</p>
+<p>exception.$inject = ['logger'];</p>
+<p>function exception(logger) {
+      var service = {
+          catcher: catcher
+      };
+      return service;</p>
+<pre><code>  function catcher(message) {
+      return function(reason) {
+          logger.error(message, reason);
+      };
+  }
+</code></pre>
+<p>}
+  ```</p>
+<h3 id="route-errors">Route Errors</h3>
+<p>Handle and log all routing errors using <a href="https://docs.angularjs.org/api/ngRoute/service/$route#$routeChangeError"><code>$routeChangeError</code></a></p>
+<ul>
+<li>
+<p>Provides a consistent way to handle all routing errors.</p>
+</li>
+<li>
+<p>Potentially provides a better user experience if a routing error occurs and you route them to a friendly screen with more details or recovery options.</p>
+</li>
+</ul>
+<p>```javascript
+  /<em> recommended </em>/
+  var handlingRouteChangeError = false;</p>
+<p>function handleRoutingErrors() {
+      /*<em>
+        * Route cancellation:
+        * On routing error, go to the dashboard.
+        * Provide an exit clause if it tries to do it twice.
+        </em>/
+      $rootScope.$on('$routeChangeError',
+          function(event, current, previous, rejection) {
+              if (handlingRouteChangeError) { return; }
+              handlingRouteChangeError = true;
+              var destination = (current &amp;&amp; (current.title ||
+                  current.name || current.loadedTemplateUrl)) ||
+                  'unknown target';
+              var msg = 'Error routing to ' + destination + '. ' +
+                  (rejection.msg || '');</p>
+<pre><code>          /**
+            * Optionally log using a custom service or $log.
+            * (Don't forget to inject custom service)
+            */
+          logger.warning(msg, [current]);
+
+          /**
+            * On routing error, go to another route/state.
+            */
+          $location.path('/');
+
+      }
+  );
+</code></pre>
+<p>}
+  ```</p>
+<h2 id="startup-logic">Startup Logic</h2>
+<h3 id="configuration">Configuration</h3>
+<p>Inject code into <a href="https://docs.angularjs.org/guide/module#module-loading-dependencies">module configuration</a> that must be configured before running the angular app. Ideal candidates include providers and constants.</p>
+<ul>
+<li>This makes it easier to have less places for configuration.</li>
+</ul>
+<pre><code class="javascript">angular
+    .module('app')
+    .config(configure);
+
+configure.$inject =
+    ['routerHelperProvider', 'exceptionHandlerProvider', 'toastr'];
+
+function configure (routerHelperProvider, exceptionHandlerProvider, toastr) {
+    exceptionHandlerProvider.configure(config.appErrorPrefix);
+    configureStateHelper();
+
+    toastr.options.timeOut = 4000;
+    toastr.options.positionClass = 'toast-bottom-right';
+
+    ////////////////
+
+    function configureStateHelper() {
+        routerHelperProvider.configure({
+            docTitle: 'NG-Modular: '
+        });
+    }
+}
+</code></pre>
+
+<h3 id="run-blocks">Run Blocks</h3>
+<p>Any code that needs to run when an application starts should be declared in a service, exposed via a function, and injected into the <a href="https://docs.angularjs.org/guide/module#module-loading-dependencies">run block</a>.</p>
+<ul>
+<li>Code directly in a run block can be difficult to test. Placing in a service makes it easier to abstract and mock.</li>
+</ul>
+<pre><code class="javascript">angular
+    .module('app')
+    .run(runBlock);
+
+runBlock.$inject = ['authenticator', 'translator'];
+
+function runBlock(authenticator, translator) {
+    authenticator.initialize();
+    translator.initialize();
+}
+</code></pre>
+
+<h2 id="animations">Animations</h2>
+<h3 id="usage">Usage</h3>
+<p>Use subtle <a href="https://docs.angularjs.org/guide/animations">animations with Angular</a> to transition between states for views and primary visual elements. Include the <a href="https://docs.angularjs.org/api/ngAnimate">ngAnimate module</a>. The 3 keys are subtle, smooth, seamless.</p>
+<ul>
+<li>
+<p>Subtle animations can improve User Experience when used appropriately.</p>
+</li>
+<li>
+<p>Subtle animations can improve perceived performance as views transition.</p>
+</li>
+</ul>
+<h3 id="sub-second">Sub Second</h3>
+<p>Use short durations for animations. I generally start with 300ms and adjust until appropriate.</p>
+<ul>
+<li>Long animations can have the reverse effect on User Experience and perceived performance by giving the appearance of a slow application.</li>
+</ul>
+<h3 id="animatecss">animate.css</h3>
+<p>Use <a href="http://daneden.github.io/animate.css/">animate.css</a> for conventional animations.</p>
+<ul>
+<li>
+<p>The animations that animate.css provides are fast, smooth, and easy to add to your application.</p>
+</li>
+<li>
+<p>Provides consistency in your animations.</p>
+</li>
+<li>
+<p>animate.css is widely used and tested.</p>
+</li>
+</ul>
+<p>Note: See this <a href="http://www.yearofmoo.com/2013/08/remastered-animation-in-angularjs-1-2.html">great post by Matias Niemelä on Angular animations</a></p>
+<h2 id="routing">Routing</h2>
+<p>Client-side routing is important for creating a navigation flow between views and composing views that are made of many smaller templates and directives.</p>
+<p>Use the <a href="http://angular-ui.github.io/ui-router/">AngularUI Router</a> for client-side routing.</p>
+<ul>
+<li>
+<p>UI Router offers all the features of the Angular router plus a few additional ones including nested routes and states.</p>
+</li>
+<li>
+<p>The syntax is quite similar to the Angular router and is easy to migrate to UI Router.</p>
+</li>
+</ul>
+<p>Note: You can use a provider such as the <code>routerHelperProvider</code> shown below to help configure states across files, during the run phase.</p>
+<p>```javascript
+  // customers.routes.js
+  angular
+      .module('app.customers')
+      .run(appRun);</p>
+<p>/<em> @ngInject </em>/
+  function appRun(routerHelper) {
+      routerHelper.configureStates(getStates());
+  }</p>
+<p>function getStates() {
+      return [
+          {
+              state: 'customer',
+              config: {
+                  abstract: true,
+                  template: '<ui-view class="shuffle-animation"/>',
+                  url: '/customer'
+              }
+          }
+      ];
+  }
+  ```</p>
+<p>```javascript
+  // routerHelperProvider.js
+  angular
+      .module('blocks.router')
+      .provider('routerHelper', routerHelperProvider);</p>
+<p>routerHelperProvider.$inject = ['$locationProvider', '$stateProvider', '$urlRouterProvider'];
+  /<em> @ngInject </em>/
+  function routerHelperProvider($locationProvider, $stateProvider, $urlRouterProvider) {</p>
+<pre><code>  this.$get = RouterHelper;
+
+  $locationProvider.html5Mode(true);
+
+  RouterHelper.$inject = ['$state'];
+  /* @ngInject */
+  function RouterHelper($state) {
+      var hasOtherwise = false;
+
+      var service = {
+          configureStates: configureStates,
+          getStates: getStates
+      };
+
+      return service;
+
+      ///////////////
+
+      function configureStates(states, otherwisePath) {
+          states.forEach(function(state) {
+              $stateProvider.state(state.state, state.config);
+          });
+          if (otherwisePath &amp;&amp; !hasOtherwise) {
+              hasOtherwise = true;
+              $urlRouterProvider.otherwise(otherwisePath);
+          }
+      }
+
+      function getStates() { return $state.get(); }
+  }
+</code></pre>
+<p>}
+  ```</p>
+<p>Define routes for views in the module where they exist. Each module should contain the routes for the views in the module.</p>
+<ul>
+<li>
+<p>Each module should be able to stand on its own.</p>
+</li>
+<li>
+<p>When removing a module or adding a module, the app will only contain routes that point to existing views.</p>
+</li>
+<li>
+<p>This makes it easy to enable or disable portions of an application without concern over orphaned routes.</p>
+</li>
+</ul>
+<h2 id="filters">Filters</h2>
+<p>Avoid using filters for scanning all properties of a complex object graph. Use filters for select properties.</p>
+<ul>
+<li>Filters can easily be abused and negatively affect performance if not used wisely, for example when a filter hits a large and deep object graph.</li>
+</ul>
+<h2 id="angular-wrapper-services">Angular $ Wrapper Services</h2>
+<h3 id="document-and-window">$document and $window</h3>
+<p>Use <a href="https://docs.angularjs.org/api/ng/service/$document"><code>$document</code></a> and <a href="https://docs.angularjs.org/api/ng/service/$window"><code>$window</code></a> instead of <code>document</code> and <code>window</code>.</p>
+<ul>
+<li>These services are wrapped by Angular and more easily testable than using document and window in tests. This helps you avoid having to mock document and window yourself.</li>
+</ul>
+<h3 id="timeout-and-interval">$timeout and $interval</h3>
+<p>Use <a href="https://docs.angularjs.org/api/ng/service/$timeout"><code>$timeout</code></a> and <a href="https://docs.angularjs.org/api/ng/service/$interval"><code>$interval</code></a> instead of <code>setTimeout</code> and <code>setInterval</code> .</p>
+<ul>
+<li>These services are wrapped by Angular and more easily testable and handle Angular's digest cycle thus keeping data binding in sync.</li>
+</ul>
+<h2 id="resolving-promises">Resolving Promises</h2>
+<h3 id="controller-activation-promises">Controller Activation Promises</h3>
+<p>Resolve start-up logic for a controller in an <code>activate</code> function.</p>
+<ul>
+<li>
+<p>Placing start-up logic in a consistent place in the controller makes it easier to locate, more consistent to test, and helps avoid spreading out the activation logic across the controller.</p>
+</li>
+<li>
+<p>The controller <code>activate</code> makes it convenient to re-use the logic for a refresh for the controller/View, keeps the logic together, gets the user to the View faster, makes animations easy on the <code>ng-view</code> or <code>ui-view</code>, and feels snappier to the user.</p>
+</li>
+</ul>
+<p>```coffee
+  # avoid
+  (-&gt;
+    Avengers = (dataservice)-&gt;
+          init = ()=&gt;
+          @avengers = []
+          @title = 'Avengers'</p>
+<pre><code>      dataservice
+      .getAvengers()
+      .then (data)=&gt;
+          @avengers = data
+
+      init()
+      return
+
+angular
+  .module('app')
+  .controller('Avengers', Avengers)
+</code></pre>
+<p>)()
+  ```</p>
+<p>```coffee
+  # recommended
+  (-&gt;
+    Avengers = (dataservice)-&gt;</p>
+<pre><code>  init = ()=&gt;
+      @avengers = []
+      @title = 'Avengers'
+
+      activate()
+
+  ##############
+
+  activate = ()=&gt;
+      dataservice
+      .getAvengers()
+      .then (data)=&gt;
+          @avengers = data
+
+  init()
+  return
+
+angular
+  .module('app')
+  .controller('Avengers', Avengers)
+</code></pre>
+<p>)()
+  ```</p>
+<h3 id="handling-exceptions-with-promises">Handling Exceptions with Promises</h3>
+<p>The <code>catch</code> block of a promise must return a rejected promise to maintain the exception in the promise chain.</p>
+<p>Always handle exceptions in services.</p>
+<ul>
+<li>
+<p>If the <code>catch</code> block does not return a rejected promise, the caller of the promise will not know an exception occurred. The caller's <code>then</code> will execute. Thus, the user may never know what happened.</p>
+</li>
+<li>
+<p>To avoid swallowing errors and misinforming the user.</p>
+</li>
+</ul>
+<p>Note: Consider putting any exception handling in a function in a shared module and service.</p>
+<pre><code class="javascript">/* avoid */
+
+function getCustomer(id) {
+    return $http.get('/api/customer/' + id)
+        .then(getCustomerComplete)
+        .catch(getCustomerFailed);
+
+    function getCustomerComplete(data, status, headers, config) {
+        return data.data;
+    }
+
+    function getCustomerFailed(e) {
+        var newMessage = 'XHR Failed for getCustomer'
+        if (e.data &amp;&amp; e.data.description) {
+          newMessage = newMessage + '\n' + e.data.description;
+        }
+        e.data.description = newMessage;
+        logger.error(newMessage);
+        // ***
+        // Notice there is no return of the rejected promise
+        // ***
+    }
+}
+
+/* recommended */
+function getCustomer(id) {
+    return $http.get('/api/customer/' + id)
+        .then(getCustomerComplete)
+        .catch(getCustomerFailed);
+
+    function getCustomerComplete(data, status, headers, config) {
+        return data.data;
+    }
+
+    function getCustomerFailed(e) {
+        var newMessage = 'XHR Failed for getCustomer'
+        if (e.data &amp;&amp; e.data.description) {
+          newMessage = newMessage + '\n' + e.data.description;
+        }
+        e.data.description = newMessage;
+        logger.error(newMessage);
+        return $q.reject(e);
+    }
+}
+</code></pre>
+
+<h2 id="directives">Directives</h2>
+<h3 id="limit-1-per-file">Limit 1 Per File</h3>
+<p>Create one directive per file. Name the file for the directive.</p>
+<ul>
+<li>
+<p>It is easy to mash all the directives in one file, but difficult to then break those out so some are shared across apps, some across modules, some just for one module.</p>
+</li>
+<li>
+<p>One directive per file is easy to maintain.</p>
+</li>
+</ul>
+<blockquote>
+<p>Note: "<strong>Best Practice</strong>: Directives should clean up after themselves. You can use <code>element.on('$destroy', ...)</code> or <code>scope.$on('$destroy', ...)</code> to run a clean-up function when the directive is removed" ... from the Angular documentation.</p>
+</blockquote>
+<pre><code class="coffee"># avoid
+angular
+    .module('app.widgets')
+
+    # order directive that is specific to the order module
+    .directive('orderCalendarRange', orderCalendarRange)
+
+    # sales directive that can be used anywhere across the sales app
+    .directive('salesCustomerInfo', salesCustomerInfo)
+
+    # spinner directive that can be used anywhere across apps
+    .directive('sharedSpinner', sharedSpinner)
+
+</code></pre>
+
+<pre><code class="coffee"># recommended
+
+# order directive that is specific to the order module at a company named Acme
+angular
+    .module('sales.order')
+    .directive('acmeOrderCalendarRange', orderCalendarRange)
+
+# spinner directive that can be used anywhere across the sales app at a company named Acme
+angular
+    .module('sales.widgets')
+    .directive('acmeSalesCustomerInfo', salesCustomerInfo)
+
+# spinner directive that can be used anywhere across apps at a company named Acme
+angular
+    .module('shared.widgets')
+    .directive('acmeSharedSpinner', sharedSpinner)
+
+</code></pre>
+
+<p>Note: There are many naming options for directives, especially since they can be used in narrow or wide scopes. Choose one that makes the directive and its file name distinct and clear. Some examples are below, but see the <a href="#naming">Naming</a> section for more recommendations.</p>
+<h3 id="manipulate-dom-in-a-directive">Manipulate DOM in a Directive</h3>
+<p>When manipulating the DOM directly, use a directive. If alternative ways can be used such as using CSS to set styles or the <a href="https://docs.angularjs.org/api/ngAnimate">animation services</a>, Angular templating, <a href="https://docs.angularjs.org/api/ng/directive/ngShow"><code>ngShow</code></a> or <a href="https://docs.angularjs.org/api/ng/directive/ngHide"><code>ngHide</code></a>, then use those instead. For example, if the directive simply hides and shows, use ngHide/ngShow.</p>
+<ul>
+<li>DOM manipulation can be difficult to test, debug, and there are often better ways (e.g. CSS, animations, templates)</li>
+</ul>
+<h3 id="provide-a-unique-directive-prefix">Provide a Unique Directive Prefix</h3>
+<p>Provide a short, unique and descriptive directive prefix such as <code>acmeSalesCustomerInfo</code> which would be declared in HTML as <code>acme-sales-customer-info</code>.</p>
+<ul>
+<li>The unique short prefix identifies the directive's context and origin. For example a prefix of <code>cc-</code> may indicate that the directive is part of a CodeCamper app while <code>acme-</code> may indicate a directive for the Acme company.</li>
+</ul>
+<p>Note: Avoid <code>ng-</code> as these are reserved for Angular directives. Research widely used directives to avoid naming conflicts, such as <code>ion-</code> for the <a href="http://ionicframework.com/">Ionic Framework</a>.</p>
+<h3 id="restrict-to-elements-and-attributes">Restrict to Elements and Attributes</h3>
+<p>When creating a directive that makes sense as a stand-alone element, allow restrict <code>E</code> (custom element) and optionally restrict <code>A</code> (custom attribute). Generally, if it could be its own control, <code>E</code> is appropriate. General guideline is allow <code>EA</code> but lean towards implementing as an element when it's stand-alone and as an attribute when it enhances its existing DOM element.</p>
+<ul>
+<li>
+<p>It makes sense.</p>
+</li>
+<li>
+<p>While we can allow the directive to be used as a class, if the directive is truly acting as an element it makes more sense as an element or at least as an attribute.</p>
+</li>
+</ul>
+<p>Note: EA is the default for Angular 1.3 +</p>
+<p><code>pug
+  //avoid
+  div.my-calendar-range</code></p>
+<p>```coffee
+  # avoid
+  (-&gt;
+      myCalendarRange = () -&gt;
+          link = (scope, element, attrs)-&gt;
+          # ... #</p>
+<pre><code>      directive =
+      link: link,
+      templateUrl: '/template/is/located/here.html',
+      restrict: 'C'
+
+      return directive
+
+  angular
+      .module('app.widgets')
+      .directive('myCalendarRange', myCalendarRange)
+</code></pre>
+<p>)()
+  ```</p>
+<p><code>html
+  //recommended
+  div
+    my-calendar-range</code></p>
+<p>```coffee
+  # recommended
+  (-&gt;</p>
+<pre><code>  myCalendarRange = () -&gt;
+
+      link = (scope, element, attrs)-&gt;
+      # ... #
+
+      directive =
+          link: link,
+          templateUrl: '/template/is/located/here.html',
+          restrict: 'EA'
+
+      return directive
+
+  angular
+      .module('app.widgets')
+      .directive('myCalendarRange', myCalendarRange)
+</code></pre>
+<p>)()
+  ```</p>
+<h3 id="directives-and-controlleras">Directives and ControllerAs</h3>
+<p>Use <code>controller as</code> syntax with a directive to be consistent with using <code>controller as</code> with view and controller pairings.</p>
+<ul>
+<li>It makes sense and it's not difficult.</li>
+</ul>
+<p>Note: The directive below demonstrates some of the ways you can use scope inside of link and directive controllers, using controllerAs. I in-lined the template just to keep it all in one place.</p>
+<p>Note: Regarding dependency injection, see <a href="#manual-annotating-for-dependency-injection">Manually Identify Dependencies</a>.</p>
+<p>Note: Note that the directive's controller is outside the directive's closure. This style eliminates issues where the injection gets created as unreachable code after a <code>return</code>.</p>
+<!--todo: change this-->
+
+<pre><code class="html">&lt;div my-example max=&quot;77&quot;&gt;&lt;/div&gt;
+</code></pre>
+
+<pre><code class="coffee">myExample = () -&gt;
+  directive =
+    restrict: 'EA'
+    templateUrl: 'app/feature/example.directive.html'
+    scope: max: '='
+    link: linkFunc
+    controller: ExampleController
+    controllerAs: 'vm'
+    bindToController: true
+
+  linkFunc = (scope, el, attr, ctrl) -&gt;
+    console.log 'LINK: scope.min = %s *** should be undefined', scope.min
+    console.log 'LINK: scope.max = %s *** should be undefined', scope.max
+    console.log 'LINK: scope.vm.min = %s', scope.vm.min
+    console.log 'LINK: scope.vm.max = %s', scope.vm.max
+
+  return directive
+
+ExampleController = ($scope) -&gt;
+  # Injecting $scope just for comparison
+  vm = this
+  vm.min = 3
+  console.log 'CTRL: $scope.vm.min = %s', $scope.vm.min
+  console.log 'CTRL: $scope.vm.max = %s', $scope.vm.max
+  console.log 'CTRL: vm.min = %s', vm.min
+  console.log 'CTRL: vm.max = %s', vm.max
+
+angular.module('app').directive 'myExample', myExample
+ExampleController.$inject = [ '$scope' ]
+</code></pre>
+
+<pre><code class="pug">div hello world
+div
+  | max={{vm.max}}
+  input(ng-model='vm.max')
+div
+  | min={{vm.min}}
+  input(ng-model='vm.min')
+</code></pre>
+
+<p>Use <code>bindToController = true</code> when using <code>controller as</code> syntax with a directive when you want to bind the outer scope to the directive's controller's scope.</p>
+<ul>
+<li>It makes it easy to bind outer scope to the directive's controller scope.</li>
+</ul>
+<p>Note: <code>bindToController</code> was introduced in Angular 1.3.0.</p>
+<pre><code class="pug">div(my-example='', max='77')
+</code></pre>
+
+<pre><code class="coffee">(-&gt;
+  myExample = () -&gt;
+    directive =
+      restrict: 'EA'
+      templateUrl: 'app/feature/example.directive.html'
+      scope: max: '='
+      controller: ExampleController
+      controllerAs: 'vm'
+      bindToController: true
+    return directive
+
+angular
+  .module('app')
+  .directive('myExample', myExample)
+</code></pre>
+
+<pre><code class="pug">div hello world
+div
+  | max={{vm.max}}
+  input(ng-model='vm.max')
+div
+  | min={{vm.min}}
+  input(ng-model='vm.min')
+</code></pre></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script><div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
