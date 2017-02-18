@@ -552,8 +552,6 @@ Expose the callable members of the service (its interface) at the top, using a t
 
     someValue = ''
 
-    ##########
-
     return
         save: () ->
         # . #
@@ -1056,24 +1054,31 @@ app/
         topnav.pug
         topnav.controller.coffee
     people/
-        attendees.pug
-        attendees.controller.coffee
+        attendees/
+            attendees.pug
+            attendees.controller.coffee
+            attendees.service.coffee
+        speekers/
+            speaker-detail/
+                speaker-detail.pug
+                speaker-detail.controller.coffee
+                speaker-detail.service.coffee
+            speakers.pug
+            speakers.controller.coffee
         people.routes.coffee
-        speakers.pug
-        speakers.controller.coffee
-        speaker-detail.pug
-        speaker-detail.controller.coffee
     services/
-        data.service.coffee
         localstorage.service.coffee
         logger.service.coffee
         spinner.service.coffee
     sessions/
+        session-detial/
+            session-detail.pug
+            session-detail.controller.coffee
+            session-detail.service.coffee
         sessions.pug
         sessions.controller.coffee
         sessions.routes.coffee
-        session-detail.pug
-        session-detail.controller.coffee
+        sessions.service.coffee
 ```
 
 ![Sample App Structure](https://raw.githubusercontent.com/johnpapa/angular-styleguide/master/a1/assets/modularity-2.png)
