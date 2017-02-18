@@ -642,8 +642,6 @@ input(ng-model=&quot;productVm.title&quot;)
 
     someValue = ''
 
-    ##########
-
     return
         save: () -&gt;
         # . #
@@ -1135,27 +1133,33 @@ app/
         topnav.pug
         topnav.controller.coffee
     people/
-        attendees.pug
-        attendees.controller.coffee
+        attendees/
+            attendees.pug
+            attendees.controller.coffee
+            attendees.service.coffee
+        speekers/
+            speaker-detail/
+                speaker-detail.pug
+                speaker-detail.controller.coffee
+                speaker-detail.service.coffee
+            speakers.pug
+            speakers.controller.coffee
         people.routes.coffee
-        speakers.pug
-        speakers.controller.coffee
-        speaker-detail.pug
-        speaker-detail.controller.coffee
     services/
-        data.service.coffee
         localstorage.service.coffee
         logger.service.coffee
         spinner.service.coffee
     sessions/
+        session-detial/
+            session-detail.pug
+            session-detail.controller.coffee
+            session-detail.service.coffee
         sessions.pug
         sessions.controller.coffee
         sessions.routes.coffee
-        session-detail.pug
-        session-detail.controller.coffee
+        sessions.service.coffee
 </code></pre>
 
-<p><img alt="Sample App Structure" src="https://raw.githubusercontent.com/johnpapa/angular-styleguide/master/a1/assets/modularity-2.png" /></p>
 <p>Note: Do not structure your app using folders-by-type. This requires moving to multiple folders when working on a feature and gets unwieldy quickly as the app grows to 5, 10 or 25+ views and controllers (and other features), which makes it more difficult than folder-by-feature to locate files.</p>
 <pre><code class="javascript">/*
 * avoid
@@ -1504,5 +1508,5 @@ var files = [
 
 <!--
 MkDocs version : 0.16.1
-Build Date UTC : 2017-02-18 02:49:08
+Build Date UTC : 2017-02-18 03:02:17
 -->
