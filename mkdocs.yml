@@ -1,4 +1,6 @@
 site_name: AngularJS CoffeeScript Style Guide
+site_url: https://thunderrun.github.io/AngularJS-CoffeeScript-StyleGuide
+repo_url: https://github.com/thunderrun/AngularJS-CoffeeScript-StyleGuide
 pages:
     - Style Guide: 
         - 'Basics': 'index.md'
