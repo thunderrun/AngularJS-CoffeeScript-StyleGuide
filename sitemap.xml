@@ -4,13 +4,13 @@
     
         
     <url>
-     <loc>/</loc>
+     <loc>https://thunderrun.github.io/AngularJS-CoffeeScript-StyleGuide/</loc>
      <lastmod>2017-02-18</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>/advanced/</loc>
+     <loc>https://thunderrun.github.io/AngularJS-CoffeeScript-StyleGuide/advanced/</loc>
      <lastmod>2017-02-18</lastmod>
      <changefreq>daily</changefreq>
     </url>
@@ -19,7 +19,7 @@
 
     
     <url>
-     <loc>/about/</loc>
+     <loc>https://thunderrun.github.io/AngularJS-CoffeeScript-StyleGuide/about/</loc>
      <lastmod>2017-02-18</lastmod>
      <changefreq>daily</changefreq>
     </url>
