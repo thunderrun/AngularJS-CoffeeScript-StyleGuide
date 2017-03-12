@@ -1,15 +1,5 @@
 # Basics
 
-## EsLint / CoffeeLint
-
-### Install EsLint / CoffeeLint plugin in your Code Editor
-
-Use EsLint/CoffeeLint for linting your JavaScript/CoffeeScript.
-
-- Provides a first alert prior to committing any code to source control.
-
-- Provides consistency across your team.
-
 ## Single Responsibility
 
 ### Rule of 1
